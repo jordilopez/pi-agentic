@@ -26,15 +26,18 @@ assumptions.
   written against.
 - It exposes: `subagent`, `delegate_subagent`, `steer_subagent`,
   `get_subagent_result`, `wait_for_subagent_idle`, `stop_subagent`.
-- Install via `pi install @vanillagreen/pi-agents-tmux` (override with
-  `PI_GRAPH_PACKAGE` in `scripts/setup.sh`; the env var name is kept for
-  continuity with the plan).
+- Install via `pi install npm:@vanillagreen/pi-agents-tmux@3.0.0` (override with
+  `PI_AGENTS_TMUX_PACKAGE` in `scripts/setup.sh`). The setup script pins 3.0.0
+  by default so upgrades are deliberate.
 
 ## Agent discovery (confirmed)
 
 - User scope: `~/.pi/agent/agents/*.md` (plus `~/.claude/agents`). This is the
   correct symlink target; the historical assumption still holds.
 - Project scope: nearest `<project>/.pi/agents` plus `<project>/.claude/agents`.
+- With `agentScope: "both"`, duplicate names resolve in this order: user
+  Claude → user Pi → project Claude → project Pi. A project-local file with
+  the same name therefore does not automatically override a global Pi agent.
 - Agents are discovered fresh on each subagent invocation — no pi reload
   needed after linking.
 - Frontmatter fields in current use:
@@ -93,10 +96,33 @@ Workflows:
 | implement-and-review | keep     | worker → reviewer → worker loop                                                                                                                                                                                                                                                                                                                                        |
 | review-and-commit    | adapt    | Originally depended on a `commit-full` skill in pi-setup that no longer exists. Migrated fully self-contained with the plan/execute split: reviewer (read-only) audits, the parent builds an approved commit plan from inline guidance, then the worker agent executes it (fixes, cleanup, tests, local commits). No skill references, no pi-setup runtime dependency. |
 
+## tmux runtime guidance
+
+- `pane: true` agents require Pi to run inside tmux. The current package
+  requires tmux 3.5 or newer for the recommended extended-key configuration.
+- Recommended `~/.tmux.conf` settings:
+
+  ```tmux
+  set -g extended-keys on
+  set -g extended-keys-format csi-u
+  ```
+
+- The setup script checks tmux availability, version, whether the current
+  shell is inside a tmux session, and (when inside one) the extended-key
+  settings. It never edits `~/.tmux.conf`.
+- The tmux server inherits the environment from the shell that starts it.
+  Start it after the shell has initialized the `pi`/Node `PATH`; restart the
+  server after changing that environment.
+- pi-agents-tmux creates and resumes pane agents automatically. Use `/agents`
+  and `/agents status` to inspect them, `/agents:attach` to focus one,
+  `/agents:stop` to stop one while preserving its session, and `/agents collect`
+  to collect completed results.
+
 ## Setup mechanics (decided)
 
 - `scripts/setup.sh` is the only opt-in entry point. It:
-  1. `pi install "$PI_GRAPH_PACKAGE"` (default `@vanillagreen/pi-agents-tmux`);
+  1. `pi install "$PI_AGENTS_TMUX_PACKAGE"` (default
+     `npm:@vanillagreen/pi-agents-tmux@3.0.0`);
   2. `pi install <this repo>` (exposes `workflows/` as prompt templates);
   3. symlinks `agents/*.md` individually into `~/.pi/agent/agents/`
      (preserve foreign files, refresh owned symlinks, remove stale owned

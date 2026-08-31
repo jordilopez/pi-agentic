@@ -25,7 +25,7 @@ The separation rule, enforced by layout and setup behavior:
 - [pi](https://pi.dev) (`pi` on PATH)
 - tmux >= 3.5 (only needed for `pane: true` agents; bg agents work without it)
 - The orchestration package `@vanillagreen/pi-agents-tmux` (installed by the
-  setup script; override with `PI_GRAPH_PACKAGE`)
+  setup script; override with `PI_AGENTS_TMUX_PACKAGE`)
 
 ## Install
 
@@ -47,9 +47,66 @@ The script is idempotent and safe to re-run. It:
 
 It never installs or modifies `pi-setup`.
 
-After running: restart pi (or `/reload`) so the workflow prompt templates
-load. Agents are discovered fresh on each subagent invocation — no reload
-needed for agent edits.
+### Configure tmux before using pane agents
+
+`worker`, `docs`, and `tester` use `pane: true`, so Pi must be running inside
+a tmux session for them to open visible persistent panes. `scout`, `planner`,
+and `reviewer` use background sessions and do not require tmux.
+
+Use tmux 3.5 or newer. Add this to `~/.tmux.conf` — the setup script checks
+for it but never edits your tmux configuration:
+
+```tmux
+set -g extended-keys on
+set -g extended-keys-format csi-u
+```
+
+Reload the configuration:
+
+```bash
+tmux source-file ~/.tmux.conf
+```
+
+If modified keys still behave incorrectly, start a fresh tmux server after
+saving any work in existing sessions:
+
+```bash
+tmux kill-server   # closes all tmux sessions; use only when that is safe
+tmux new-session -A -s pi-agentic
+```
+
+Start Pi from the tmux session, preferably from the project directory where
+the work will happen:
+
+```bash
+tmux new-session -A -s pi-agentic
+cd ~/path/to/project
+pi
+```
+
+The tmux server inherits the environment of the shell that starts it. If Pi
+or Node was installed through a version manager, start tmux after that
+manager has initialized, and restart the server after changing `PATH`.
+
+When a pane agent is dispatched, pi-agents-tmux creates or resumes its
+persistent pane automatically. You do not need to create a pane manually.
+Useful commands inside Pi include:
+
+- `/agents` — browse project and user agents.
+- `/agents status` — inspect persistent pane state.
+- `/agents:attach <name>` — focus an agent pane.
+- `/agents:send <name> <task>` — queue work for a pane agent.
+- `/agents:stop <name>` — stop a pane while preserving its session memory.
+- `/agents collect` — collect completed pane results.
+
+If panes do not appear, check `echo "$TMUX"`, `tmux -V`, and `command -v
+pi` from the same tmux shell. Also confirm that the agent has `pane: true`
+and that the orchestration package is enabled. Stop and restart a pane if it
+retains a stale project directory.
+
+After installation: restart pi (or `/reload`) so the workflow prompt
+templates load. Agents are discovered fresh on each subagent invocation — no
+reload needed for agent edits.
 
 ## Invoke a workflow
 
@@ -80,12 +137,19 @@ immediately — the link points at the source file.
 The agents here are **generic role definitions** — deliberate starting
 points, not project-specific workers. For per-project behavior, create a
 project-scope agent in the nearest `<project>/.pi/agents/` directory (or
-`.claude/agents/`) using the same frontmatter format. Project scope is the
-default inventory for `subagent` calls, so a project-local definition is
-what project sessions pick up by default. If you reuse the same name as a
-generic agent, verify which definition your installed orchestration version
-resolves when both scopes are loaded (`agentScope: "both"`) — otherwise give
-the project variant its own name.
+`.claude/agents/`) using the same frontmatter format.
+
+The current pi-agents-tmux resolution order for `agentScope: "both"` is:
+user Claude → user Pi → project Claude → project Pi. Therefore, a project
+agent with the same name does not automatically override the generic user Pi
+symlink. Use one of these safe patterns:
+
+1. Give the project-specific role a distinct name and reference that name in
+   a project-local workflow.
+2. Use a project-local workflow with `agentScope: "project"` when the project
+   should provide the role definition exclusively.
+3. If intentionally replacing a global role, remove or rename the global
+   symlink first, then verify the selected definition with `/agents`.
 
 Never edit the files in this repository to tweak one project: keep them
 generic and put project-specific behavior in the project's own agents

@@ -3,7 +3,7 @@
 # Opt-in installer for the pi-agentic layer.
 #
 # Jobs:
-#   1. `pi install $PI_GRAPH_PACKAGE`        - the orchestration package
+#   1. `pi install $PI_AGENTS_TMUX_PACKAGE` - the orchestration package
 #                                              (default @vanillagreen/pi-agents-tmux)
 #                                              that provides the subagent tools.
 #   2. `pi install ./`                        - register this repo as a pi
@@ -23,15 +23,35 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AGENTS_SRC="$REPO_ROOT/agents"
 
-# Orchestration package source. Override to pin a version or use a fork, e.g.:
-#   PI_GRAPH_PACKAGE='npm:@vanillagreen/pi-agents-tmux@3.0.0' ./scripts/setup.sh
-PI_GRAPH_PACKAGE="${PI_GRAPH_PACKAGE:-@vanillagreen/pi-agents-tmux}"
+# Pin the tested orchestration package by default. Override to test a newer
+# release or a fork, for example:
+#   PI_AGENTS_TMUX_PACKAGE='npm:@vanillagreen/pi-agents-tmux@3.0.0' ./scripts/setup.sh
+PI_AGENTS_TMUX_PACKAGE="${PI_AGENTS_TMUX_PACKAGE:-npm:@vanillagreen/pi-agents-tmux@3.0.0}"
 
 USER_AGENT_DIR="$HOME/.pi/agent/agents"
 MODE="install"
-if [[ "${1:-}" == "--remove" ]]; then
-  MODE="remove"
-fi
+case "${1:-}" in
+  "") ;;
+  --remove) MODE="remove" ;;
+  --help|-h)
+    cat <<EOF
+Usage: $0 [--remove]
+
+Install the optional pi-agentic layer, or remove only this repository's
+package registrations and agent symlinks. The installer does not modify
+pi-setup or user-owned agent files.
+
+Environment:
+  PI_AGENTS_TMUX_PACKAGE  orchestration package source
+                          (default: $PI_AGENTS_TMUX_PACKAGE)
+EOF
+    exit 0
+    ;;
+  *)
+    printf 'Usage: %s [--remove]\n' "$0" >&2
+    exit 2
+    ;;
+esac
 
 # ---- helpers ---------------------------------------------------------------
 
@@ -45,20 +65,39 @@ if ! command -v pi >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ -z "${TMUX:-}" ]] || ! command -v tmux >/dev/null 2>&1; then
-  warn "tmux unavailable — agents with pane: true need tmux >= 3.5 and a tmux session."
-  warn "bg agents (pane: false) work without it."
-elif command -v tmux >/dev/null 2>&1; then
-  tmux_version="$(tmux -V 2>/dev/null | sed -E 's/tmux ([0-9.]+).*/\1/' || true)"
-  if [[ -n "$tmux_version" ]]; then
-    # Numeric major/minor comparison — a lexicographic string compare would
-    # mis-rank versions like 3.10 as older than 3.5.
-    tmux_major="${tmux_version%%.*}"
-    tmux_minor="${tmux_version#*.}"
-    tmux_minor="${tmux_minor%%.*}"
-    if [[ "$tmux_major" =~ ^[0-9]+$ && "$tmux_minor" =~ ^[0-9]+$ ]] && (( tmux_major < 3 || (tmux_major == 3 && tmux_minor < 5) )); then
-      warn "tmux $tmux_version detected — pane agents require tmux >= 3.5"
+# Pane agents need a live tmux session. We intentionally warn rather than
+# fail: scout/planner/reviewer run in the background and setup can be done
+# before the user starts Pi in tmux.
+tmux_available=0
+tmux_version=""
+tmux_version_ok=0
+if command -v tmux >/dev/null 2>&1; then
+  tmux_available=1
+  tmux_version="$(tmux -V 2>/dev/null | sed -E 's/tmux ([0-9]+\.[0-9]+).*/\1/' || true)"
+  tmux_major="${tmux_version%%.*}"
+  tmux_minor="${tmux_version#*.}"
+  if [[ "$tmux_major" =~ ^[0-9]+$ && "$tmux_minor" =~ ^[0-9]+$ ]]; then
+    if (( tmux_major > 3 || (tmux_major == 3 && tmux_minor >= 5) )); then
+      tmux_version_ok=1
     fi
+  fi
+fi
+
+if (( ! tmux_available )); then
+  warn "tmux not found — pane agents need tmux >= 3.5."
+  warn "bg agents (pane: false) still work; see README.md for setup guidance."
+elif (( ! tmux_version_ok )); then
+  warn "tmux ${tmux_version:-unknown} detected — pane agents are supported with tmux >= 3.5."
+elif [[ -z "${TMUX:-}" ]]; then
+  warn "tmux $tmux_version is available, but this shell is outside tmux."
+  warn "Start Pi inside tmux for pane agents (see README.md); installation can continue."
+else
+  info "tmux $tmux_version session detected; pane agents can use visible panes."
+  extended_keys="$(tmux show-options -gqv extended-keys 2>/dev/null || true)"
+  extended_keys_format="$(tmux show-options -gqv extended-keys-format 2>/dev/null || true)"
+  if [[ "$extended_keys" != "on" || "$extended_keys_format" != "csi-u" ]]; then
+    warn "tmux extended keys are not configured as recommended (on / csi-u)."
+    warn "Add the settings from README.md, then start a fresh tmux server."
   fi
 fi
 
@@ -82,7 +121,7 @@ if [[ "$MODE" == "remove" ]]; then
   fi
 
   # Package registrations (best effort — settings may already be clean).
-  for pkg in "$REPO_ROOT" "$PI_GRAPH_PACKAGE"; do
+  for pkg in "$REPO_ROOT" "$PI_AGENTS_TMUX_PACKAGE"; do
     if pi remove "$pkg" >/dev/null 2>&1; then
       info "  pi remove $pkg"
     else
@@ -96,8 +135,8 @@ fi
 
 # ---- 1. orchestration package ----------------------------------------------
 
-info "Installing orchestration package: $PI_GRAPH_PACKAGE"
-pi install "$PI_GRAPH_PACKAGE"
+info "Installing orchestration package: $PI_AGENTS_TMUX_PACKAGE"
+pi install "$PI_AGENTS_TMUX_PACKAGE"
 
 # ---- 2. this repo as a pi package (workflows -> prompt templates) -----------
 
@@ -156,4 +195,5 @@ fi
 info "Done. Restart pi (or run /reload) to load the workflow prompt templates."
 info "Agents are discovered fresh on each subagent invocation — no reload needed."
 info "Invoke a workflow explicitly with its /command (see README.md)."
+info "For pane agents, run Pi from a tmux session with the recommended key settings."
 info "Teardown: $REPO_ROOT/scripts/setup.sh --remove"
