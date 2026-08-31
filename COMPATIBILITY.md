@@ -86,12 +86,12 @@ Agents (from `pi-setup@71e76d0^`):
 
 Workflows:
 
-| Workflow             | Decision | Reason                                                                                                                                                                                                             |
-| -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| scout-and-plan       | keep     | Minimal composable planning entry point                                                                                                                                                                            |
-| implement            | keep     | scout → planner → worker chain                                                                                                                                                                                     |
-| implement-and-review | keep     | worker → reviewer → worker loop                                                                                                                                                                                    |
-| review-and-commit    | adapt    | References a `commit-full` skill that no longer exists; pi-setup now ships `commit-plan`/`commit-quick` (and `commit-quick` does not match the workflow's intent). Rewrite against `commit-plan` before migrating. |
+| Workflow             | Decision | Reason                                                                                                                                                                                                                                                     |
+| -------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| scout-and-plan       | keep     | Minimal composable planning entry point                                                                                                                                                                                                                    |
+| implement            | keep     | scout → planner → worker chain                                                                                                                                                                                                                             |
+| implement-and-review | keep     | worker → reviewer → worker loop                                                                                                                                                                                                                            |
+| review-and-commit    | adapt    | Originally depended on a `commit-full` skill in pi-setup that no longer exists. Migrated as self-contained: it reuses whatever commit skill is available in the session and falls back to inline commit guidance, so pi-setup is not a runtime dependency. |
 
 ## Setup mechanics (decided)
 
