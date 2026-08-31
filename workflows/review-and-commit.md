@@ -1,7 +1,7 @@
 ---
-description: Run the reviewer agent on the current changes (across all repos with edits), present the findings, apply approved fixes, then commit each repo
+description: Reviewer audits uncommitted changes across repos, an approved commit plan is made per repo, then a worker executes it (fixes, cleanup, tests, commits)
 argument-hint: "[additional repos]"
-agents: reviewer
+agents: reviewer, worker
 ---
 Execute this workflow — one repo at a time, but reviewers run in parallel:
 
@@ -12,15 +12,12 @@ Execute this workflow — one repo at a time, but reviewers run in parallel:
    - `cwd`: the repo root
    - task: "Review the current uncommitted changes in <repo root>. Changed files: <exact file list>. This file list is the source of truth — do not re-run git reconnaissance beyond confirming the diff. Return your standard severity-ranked findings (critical / warnings / suggestions)."
 
-3. **Present the findings.** Show each repo's review summary to the user. Ask whether to apply the critical/warning fixes before committing (options: apply critical+warnings / critical only / none — commit as-is). The reviewer is read-only — you apply any approved fixes yourself.
+3. **Present the findings and decide what goes into the commit plan.** Show each repo's review summary to the user. Ask whether to apply the critical/warning fixes before committing (options: apply critical+warnings / critical only / none — commit as-is).
 
-4. **Commit per repo.** For each repo with changes:
-   - If a commit skill is available in this session (check your available skills for something like `commit-plan` or similar), read and follow it for a structured commit flow. Treat each repo as its own commit cycle.
-   - Otherwise, follow this fallback per repo:
-     1. Analyze the diff and group changes into logical commits (split unrelated concerns).
-     2. Present the grouping plan to the user and get approval before staging.
-     3. Stage and commit group by group with clear messages following the repo's commit style.
-     4. Run the repo's checks (tests, lint) before committing when they are fast; report any failures instead of committing broken code.
-   - Never push. Commits stay local.
+4. **Create the commit plan (planning-only — do not edit, stage, or commit yet).** For each repo, produce an executable commit plan following the commit-plan skill if one is available in this session (it is planning-only by design); otherwise plan per repo: dependency-ordered commit groups with exact files, types, and messages; required cleanup and focused tests; an execution checklist with the narrowest validation commands and the rule to stop and report failures instead of committing them. Fold the user-approved review fixes from step 3 into the plan as explicit tasks. Never include `git push` or PR creation. Present the plan and get the user's approval before executing.
 
-If a reviewer fails or returns an incomplete result for a repo, report that repo's status honestly and continue with the others only if the user approves.
+5. **Execute the approved plan with the `worker` agent (pane agent).** Dispatch one worker per repo with `agentScope: "both"`, `cwd` set to the repo root, and the approved plan as the task (pass it as {previous} context — the plan is the source of truth; the worker must not re-run the analysis). Instruct the worker to: follow the plan exactly and ask before any scope change; apply the fixes, cleanup, and tests; run the listed checks; stage and commit group by group only after validation passes; and never push. **END YOUR TURN** — the worker runs in its visible pane and the completion arrives as a follow-up message that wakes you.
+
+6. **On wake, report per repo** (use the wake payload / `get_subagent_result` on the saved taskId): what was committed, which checks ran, and anything the worker flagged. If the worker failed or stopped on a check failure, report the failure honestly and do not retry without asking.
+
+If the user prefers not to use a worker, offer to execute the approved plan directly in this session instead — but ask first; delegation is the default.
