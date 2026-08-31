@@ -64,9 +64,9 @@ Workflows are prompt templates. Type `/` in the pi editor to see them:
   repos, approved fixes are applied, then commits (local only, no push).
 
 Nothing runs unless you explicitly invoke a workflow. A normal skill (e.g.
-`/frontend-tip`) remains a direct active-session operation. Workflows do not
-require `pi-setup` to be installed: they reuse a commit skill only if one is
-available in the session and fall back to built-in guidance otherwise.
+`/frontend-tip`) remains a direct active-session operation. Agents and
+workflows are fully self-contained: they never call skills by name, so
+`pi-setup` does not need to be installed.
 
 ## How agents are linked
 

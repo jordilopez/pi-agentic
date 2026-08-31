@@ -22,8 +22,9 @@ The optional agentic layer for pi. It contains only:
   made a dependency of `pi-setup`, and vice versa.
 - The orchestration package (`@vanillagreen/pi-agents-tmux`) is installed by
   `scripts/setup.sh` only, never added to any `package.json`.
-- Skills never delegate to agents; workflows are the only delegation entry
-  point and are always explicitly invoked.
+- Skills never delegate to agents, and agents/workflows never call skills
+  by name — agent definitions and workflows are fully self-contained, so
+  this repo works with or without `pi-setup` installed.
 - Never modify user-owned files in `~/.pi/agent/` other than the symlinks
   this repo owns (links resolving into this repo's `agents/` directory).
 - Never switch the parent session's model from a workflow; per-agent models

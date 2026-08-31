@@ -94,6 +94,10 @@ for (const file of agentFiles) {
     if (!KNOWN_TOOLS.has(tool)) agentErrors.push(`unknown deny-tool "${tool}"`);
   }
 
+  // Agents/workflows are self-contained: they must not reference skill files.
+  const agentBody = readFileSync(join(ROOT, "agents", file), "utf-8");
+  if (/skills\/|SKILL\.md/.test(agentBody)) agentErrors.push("references skill files (must be self-contained)");
+
   if (agentErrors.length) agentErrors.forEach((error) => fail(`AGENT ${file}: ${error}`));
   else ok(name);
   agentNames.add(name);
@@ -122,6 +126,10 @@ for (const file of workflowFiles) {
   for (const agent of declared) {
     if (!agentNames.has(agent)) wfErrors.push(`references unknown agent "${agent}"`);
   }
+
+  // Agents/workflows are self-contained: they must not reference skill files.
+  const workflowBody = readFileSync(join(ROOT, "workflows", file), "utf-8");
+  if (/skills\/|SKILL\.md/.test(workflowBody)) wfErrors.push("references skill files (must be self-contained)");
 
   if (wfErrors.length) wfErrors.forEach((error) => fail(`WORKFLOW ${file}: ${error}`));
   else ok(file);

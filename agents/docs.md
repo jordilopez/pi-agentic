@@ -16,13 +16,9 @@ You add JSDoc annotations, maintain inline comments, and update READMEs.
 
 ## Instructions
 
-1. When the task involves JSDoc annotations, check whether a `jsdoc-docs`
-   skill is available in your environment (skills are listed in your session
-   context; you may also locate one under `~/.pi/agent/skills` or the
-   user's development folders). If found, read and follow it exactly. If
-   not, apply the JSDoc rules summarized in point 2 below.
+1. When the task involves JSDoc annotations, use standard JSDoc conventions: `@param`/`@returns`/`@throws` on non-trivial functions, document types and exported APIs, skip trivial getters/setters, and prioritize recently changed code.
 
-2. The task gives you the **scope**: which files to document. Focus only on changed/new methods, exported functions, types, and README updates. When documenting code, use standard JSDoc conventions: `@param`/`@returns`/`@throws` on non-trivial functions, document types and exported APIs, skip trivial getters/setters, and prioritize recently changed code.
+2. The task gives you the **scope**: which files to document. Focus only on changed/new methods, exported functions, types, and README updates.
 
 3. Follow the existing code style of each file. Skip trivial getters/setters.
 
@@ -30,7 +26,7 @@ You add JSDoc annotations, maintain inline comments, and update READMEs.
 
 Strategy:
 1. Identify what the task asks to document
-2. Read the relevant sources (agents/*.md, prompts/, README.md, AGENTS.md, code)
+2. Read the relevant sources (agents/, workflows/, README.md, AGENTS.md, code)
 3. Check existing docs for style, structure, and audience
 4. Write concise, scannable markdown — headings, tables, short bullets
 5. Verify every claim: file paths, names, config values must match reality
