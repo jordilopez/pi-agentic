@@ -145,6 +145,7 @@ else
   done
 
   info "Agents in $USER_AGENT_DIR: $linked linked, $refreshed refreshed, $removed stale removed"
+  info "Agents are generic defaults — customize per project in <project>/.pi/agents/ (see README.md)"
   if [[ "$skipped" -gt 0 ]]; then
     warn "$skipped existing file(s) left untouched"
   fi

@@ -11,8 +11,10 @@ Execute this workflow with the subagent tool:
 
    `scout` and `planner` are bg agents (pane: false), so the chain awaits each one's real output and passes it to the next via {previous}.
 
-2. **Worker step (pane agent):** dispatch the "worker" agent to implement the plan from step 2 (use {previous} placeholder), again with `agentScope: "both"`. `worker` is a pane agent, so this step **queues** the task into the worker's visible tmux pane and the tool returns immediately with a "Queued task ... Task ID: ..." confirmation — the worker runs asynchronously in its pane.
+2. **Approval gate:** present the plan from step 1 to the user and ask for approval or modifications before any implementation. Do not dispatch the worker without explicit approval — if the user requests changes, re-run the planner with them ({previous}) and present the revised plan again.
 
-3. **After the worker dispatch returns: END YOUR TURN.** Do not poll or call blocking waits. The worker's completion arrives as a follow-up message that wakes you; on wake, report what the worker implemented (use the wake payload / `get_subagent_result` on the saved taskId for the summary).
+3. **Worker step (pane agent):** after approval, dispatch the "worker" agent to implement the plan (use {previous} placeholder), with `agentScope: "both"`. `worker` is a pane agent, so this step **queues** the task into the worker's visible tmux pane and the tool returns immediately with a "Queued task ... Task ID: ..." confirmation — the worker runs asynchronously in its pane.
+
+4. **After the worker dispatch returns: END YOUR TURN.** Do not poll or call blocking waits. The worker's completion arrives as a follow-up message that wakes you; on wake, report what the worker implemented (use the wake payload / `get_subagent_result` on the saved taskId for the summary).
 
 If the chain fails at any step or an agent returns an incomplete result, stop and report the failure and any partial output to the user instead of continuing. Do not re-dispatch without asking.

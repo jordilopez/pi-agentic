@@ -75,6 +75,22 @@ Each `agents/<name>.md` is symlinked individually into
 (user scope) on every subagent call. Edits to files in this repo take effect
 immediately — the link points at the source file.
 
+## Customizing agents per project
+
+The agents here are **generic role definitions** — deliberate starting
+points, not project-specific workers. For per-project behavior, create a
+project-scope agent in the nearest `<project>/.pi/agents/` directory (or
+`.claude/agents/`) using the same frontmatter format. Project scope is the
+default inventory for `subagent` calls, so a project-local definition is
+what project sessions pick up by default. If you reuse the same name as a
+generic agent, verify which definition your installed orchestration version
+resolves when both scopes are loaded (`agentScope: "both"`) — otherwise give
+the project variant its own name.
+
+Never edit the files in this repository to tweak one project: keep them
+generic and put project-specific behavior in the project's own agents
+folder.
+
 ## Remove
 
 ```bash

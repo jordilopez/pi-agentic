@@ -10,4 +10,6 @@ Use the subagent tool with the chain parameter and `agentScope: "both"` (the age
 
 Both agents are bg (pane: false), so the chain awaits each one's real output and passes it forward via {previous}. Do NOT implement — just return the plan.
 
+**Approval gate:** after the chain returns, present the plan to the user and ask how to proceed — approve and implement (e.g. via /implement), request changes, or stop. Never start implementation on your own.
+
 If either agent fails or returns an incomplete result, report the failure and the partial output to the user instead of continuing the chain.

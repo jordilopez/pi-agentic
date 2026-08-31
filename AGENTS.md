@@ -34,6 +34,9 @@ The optional agentic layer for pi. It contains only:
 
 Agent files (`agents/<name>.md`):
 
+- These are **generic role definitions** shared across all projects. Keep
+  them project-agnostic; per-project customization belongs in the project's
+  own `<project>/.pi/agents/` folder, not here.
 - Frontmatter: `name` (matches filename), `description`, `model`,
   `model-reasoning-effort`, `pane`, optional `deny-tools`, and
   `allowed-subagents` when the agent may delegate recon.
