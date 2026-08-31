@@ -3,7 +3,7 @@ name: reviewer
 description: Code review specialist for quality and security analysis
 model: opencode-go/gpt-5.6-luna
 model-reasoning-effort: medium
-pane: false
+pane: true
 deny-tools: write, edit
 ---
 
