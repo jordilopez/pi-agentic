@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# OS noise
+.DS_Store
+
+# Editor/IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+
+# Local planning/initialization docs (never publish)
+/INITIALIZATION.md
+/PLAN.md

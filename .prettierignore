@@ -1,0 +1,9 @@
+# Generated files
+node_modules/
+package-lock.json
+
+# Prose content loaded verbatim by pi (agents, workflows). Formatting churn
+# adds no value here and risks subtle content changes — prettier covers the
+# code (scripts/) and repo docs (README.md, COMPATIBILITY.md, AGENTS.md).
+agents/
+workflows/

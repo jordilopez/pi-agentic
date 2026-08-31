@@ -1,0 +1,31 @@
+{
+  "name": "pi-agentic",
+  "version": "0.1.0",
+  "description": "Optional agentic layer for pi: agent roles, explicit workflows, and the orchestration package setup",
+  "private": true,
+  "keywords": [
+    "pi-package"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "validate": "node --experimental-strip-types scripts/validate.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@types/node": "^24",
+    "eslint": "^9",
+    "prettier": "^3",
+    "typescript": "^5",
+    "typescript-eslint": "^8"
+  },
+  "pi": {
+    "prompts": [
+      "./workflows"
+    ]
+  }
+}
