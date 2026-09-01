@@ -117,8 +117,9 @@ Workflows are prompt templates. Type `/` in the pi editor to see them:
 - `/implement <task>` — scout → planner → worker chain.
 - `/implement-and-review <task>` — worker implements, reviewer reviews,
   worker applies feedback.
-- `/review-and-commit [repos]` — reviewer audits uncommitted changes across
-  repos, approved fixes are applied, then commits (local only, no push).
+- `/review-and-commit [repos]` — reviewer audits uncommitted changes in the
+  current repo and nested repos (or explicitly listed repos), approved fixes
+  are applied, then commits (local only, no push).
 
 Nothing runs unless you explicitly invoke a workflow. A normal skill (e.g.
 `/frontend-tip`) remains a direct active-session operation. Agents and

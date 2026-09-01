@@ -1,11 +1,11 @@
 ---
-description: Reviewer audits uncommitted changes across repos, an approved commit plan is made per repo, then a worker executes it (fixes, cleanup, tests, commits)
+description: Reviewer audits uncommitted changes in the current repo and nested repos, or explicitly listed repos, then an approved commit plan is made per repo and a worker executes it (fixes, cleanup, tests, commits)
 argument-hint: "[additional repos]"
 agents: reviewer, worker
 ---
 Execute this workflow — one repo at a time, but reviewers run in parallel:
 
-1. **Find all repos with changes.** Run `git status --short` in the current working directory. Also check any sibling checkouts the user mentions or lists as arguments: $@. Produce the complete list of `{repo root, changed files}` pairs. Ignore files the repos are configured to never commit (`.env`, `auth.json`, …).
+1. **Find all repos with changes.** Treat the current working directory as the default search root. Check the current repository and discover repositories nested beneath it (subfolders containing their own `.git` metadata); do not inspect sibling checkouts or other paths unless the user explicitly lists them as arguments: $@. Run `git status --short` separately in each discovered or explicitly listed repository. Produce the complete list of `{repo root, changed files}` pairs. Ignore files the repos are configured to never commit (`.env`, `auth.json`, …).
 
 2. **Review each repo with the `reviewer` agent — in parallel.** The reviewer is a bg agent (`pane: false`), so the subagent tool awaits its real output. Dispatch one task per repo with `agentScope: "both"` (the agent is user-level):
 
