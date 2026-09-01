@@ -3,14 +3,16 @@
 Optional agentic layer for [pi](https://pi.dev): agent role definitions,
 explicit workflow entry points, and the orchestration package setup.
 
-This repository is a **companion to `pi-setup`** (see `../pi-setup`), not a
+This repository is a **companion to [`pi-setup`](https://github.com/jordilopez/pi-setup)** (see `../pi-setup`), not a
 replacement:
 
-- `pi-setup` is the stable base: reusable skills and general-purpose
-  extensions, installed by default.
+- [`pi-setup`](https://github.com/jordilopez/pi-setup) is the stable base:
+  reusable skills and general-purpose extensions, installed by default.
 - `pi-agentic` is the opt-in agentic layer: agent definitions, explicit
   workflows, and the orchestration package. Installing it does not modify
-  `pi-setup`, and skills in `pi-setup` never delegate to agents.
+  [`pi-setup`](https://github.com/jordilopez/pi-setup), and skills in
+  [`pi-setup`](https://github.com/jordilopez/pi-setup) never delegate to
+  agents.
 
 The separation rule, enforced by layout and setup behavior:
 
@@ -45,7 +47,8 @@ The script is idempotent and safe to re-run. It:
    user-scope agent directory. Existing non-symlink files are never
    overwritten; stale links owned by this repo are removed.
 
-It never installs or modifies `pi-setup`.
+It never installs or modifies
+[`pi-setup`](https://github.com/jordilopez/pi-setup).
 
 ### Configure tmux before using pane agents
 
@@ -124,7 +127,8 @@ Workflows are prompt templates. Type `/` in the pi editor to see them:
 Nothing runs unless you explicitly invoke a workflow. A normal skill (e.g.
 `/frontend-tip`) remains a direct active-session operation. Agents and
 workflows are fully self-contained: they never call skills by name, so
-`pi-setup` does not need to be installed.
+[`pi-setup`](https://github.com/jordilopez/pi-setup) does not need to be
+installed.
 
 ## How agents are linked
 
